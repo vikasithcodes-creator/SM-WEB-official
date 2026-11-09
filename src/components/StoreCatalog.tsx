@@ -66,6 +66,12 @@ export const StoreCatalog: React.FC<StoreCatalogProps> = ({
       ? activeProductModal || activeSpecsItem
       : activeSpecsItem;
 
+  // Which photo angle is shown in the product modal; reset whenever another product opens.
+  const [galleryIndex, setGalleryIndex] = useState<number>(0);
+  useEffect(() => {
+    setGalleryIndex(0);
+  }, [currentModalItem?.id]);
+
   const handleCloseModal = () => {
     setActiveSpecsItem(null);
     onCloseProductModal?.();
@@ -80,6 +86,7 @@ export const StoreCatalog: React.FC<StoreCatalogProps> = ({
     { id: 'all', name: 'All Products', targetId: 'storefront-catalog' },
     { id: 'god-idols', name: 'Sacred God Idols', targetId: 'category-section-god-idols' },
     { id: 'figurines', name: 'Art & Divine Figurines', targetId: 'category-section-figurines' },
+    { id: 'home-decor', name: 'Home Decor & Gifts', targetId: 'category-section-home-decor' },
     { id: 'custom-prints', name: 'Custom 3D Prints', targetId: 'custom-service' },
   ];
 
@@ -97,6 +104,13 @@ export const StoreCatalog: React.FC<StoreCatalogProps> = ({
       tagline: 'Mythological Collectibles',
       description:
         'High-density photopolymer resin statues capturing microscopic deity ornaments and flowing drapery.',
+    },
+    {
+      id: 'home-decor',
+      title: 'Home Decor & Gifts',
+      tagline: 'Lamps, Vases & Collectibles',
+      description:
+        'Sculptural lamps, vases and playful collectibles, 3D printed in silk and matte finishes.',
     },
   ];
 
@@ -127,6 +141,7 @@ export const StoreCatalog: React.FC<StoreCatalogProps> = ({
       const sections = [
         { id: 'god-idols', elId: 'category-section-god-idols' },
         { id: 'figurines', elId: 'category-section-figurines' },
+        { id: 'home-decor', elId: 'category-section-home-decor' },
         { id: 'custom-prints', elId: 'custom-service' },
       ];
 
@@ -172,6 +187,7 @@ export const StoreCatalog: React.FC<StoreCatalogProps> = ({
         'storefront-catalog',
         'category-section-god-idols',
         'category-section-figurines',
+        'category-section-home-decor',
         'custom-service',
       ];
 
@@ -457,6 +473,8 @@ export const StoreCatalog: React.FC<StoreCatalogProps> = ({
           scale: item.availableScales?.[0]?.key || '160mm',
         };
         const currentPrice = getProductPrice(item);
+        const galleryImages = item.gallery && item.gallery.length > 0 ? item.gallery : [item.image || item.src];
+        const shownImage = galleryImages[Math.min(galleryIndex, galleryImages.length - 1)];
 
         return (
           <div
@@ -474,12 +492,30 @@ export const StoreCatalog: React.FC<StoreCatalogProps> = ({
               <div className="w-full md:w-1/2 flex flex-col items-center justify-center bg-gray-50 rounded-2xl p-6 border border-gray-100">
                 <div className="w-full aspect-square flex items-center justify-center overflow-hidden">
                   <img
-                    src={item.image || item.src}
+                    src={shownImage}
                     alt={item.name}
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-contain object-bottom"
                   />
                 </div>
+                {galleryImages.length > 1 && (
+                  <div className="mt-3 flex items-center justify-center gap-2" role="group" aria-label="Product photos">
+                    {galleryImages.map((img, i) => (
+                      <button
+                        key={img}
+                        type="button"
+                        onClick={() => setGalleryIndex(i)}
+                        aria-label={`Show photo ${i + 1} of ${galleryImages.length}`}
+                        aria-pressed={img === shownImage}
+                        className={`w-12 h-12 rounded-lg bg-white border p-1 transition-colors cursor-pointer ${
+                          img === shownImage ? 'border-black' : 'border-gray-200 hover:border-gray-400'
+                        }`}
+                      >
+                        <img src={img} alt="" className="w-full h-full object-contain" />
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <span className="mt-3 text-[11px] font-mono text-gray-500 uppercase tracking-wider">
                   {item.edition || 'Divine Collection'} • {item.printTech || '8K SLA Resin'}
                 </span>

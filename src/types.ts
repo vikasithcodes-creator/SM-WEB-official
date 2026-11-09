@@ -1,4 +1,4 @@
-export type ProductCategory = 'god-idols' | 'accessories' | 'custom-prints' | 'figurines';
+export type ProductCategory = 'god-idols' | 'accessories' | 'custom-prints' | 'figurines' | 'home-decor';
 
 export type FinishOption =
   | 'unpainted'
@@ -38,6 +38,7 @@ export interface Product {
 
   // Unified visual, crafting and presentation attributes
   src: string; // alias to image for visual consumers
+  gallery?: string[]; // extra photo angles shown in the product modal (first entry = main image)
   basePrice?: number; // backwards-compatible alias to price
   subtitle?: string;
   categoryLabel?: string;
