@@ -24,6 +24,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  hydrateFromFirestore,
 } from './src/server/db';
 import { adminAuth, adminDb } from './src/server/firebaseAdmin';
 import { GoogleGenAI, Type } from '@google/genai';
@@ -114,6 +115,13 @@ const storage = multer.diskStorage({
   },
 });
 
+// Express 4 does not catch rejected promises from async handlers; forward them to the error middleware.
+const asyncHandler =
+  (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) =>
+  (req: Request, res: Response, next: NextFunction): void => {
+    fn(req, res, next).catch(next);
+  };
+
 const upload = multer({
   storage,
   limits: {
@@ -147,7 +155,7 @@ app.post(
       next();
     });
   },
-  (req: Request, res: Response): void => {
+  async (req: Request, res: Response): Promise<void> => {
   try {
     const body = req.body;
     const file = req.file;
@@ -198,7 +206,7 @@ app.post(
     const colour = body.colour || (items[0]?.finish ? items[0].finish : undefined);
     const notes = body.notes || (items[0]?.customDetails?.customEngraving ? items[0].customDetails.customEngraving : undefined);
 
-    const newOrder = createOrder({
+    const newOrder = await createOrder({
       customerName: body.customerName || 'Anonymous Customer',
       email: body.email || 'no-email@smstudios.local',
       phone: rawPhone,
@@ -308,7 +316,7 @@ app.get('/api/orders/track/:trackingId', handleCustomerTrackOrder);
 app.post('/api/orders/track/:trackingId', handleCustomerTrackOrder);
 
 // Customer confirms quote / order
-const handleCustomerConfirmOrder = (req: Request, res: Response): void => {
+const handleCustomerConfirmOrder = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { trackingId } = req.params;
   const existingOrder = getOrderByTrackingId(trackingId);
 
@@ -317,7 +325,7 @@ const handleCustomerConfirmOrder = (req: Request, res: Response): void => {
     return;
   }
 
-  const updated = confirmOrderByTrackingId(trackingId, 'Order confirmed by customer');
+  const updated = await confirmOrderByTrackingId(trackingId, 'Order confirmed by customer');
   if (!updated) {
     res.status(400).json({ success: false, error: 'Could not confirm order. Please try again.' });
     return;
@@ -350,7 +358,7 @@ const handleCustomerConfirmOrder = (req: Request, res: Response): void => {
       })),
     },
   });
-};
+});
 
 app.post('/api/orders/track/:trackingId/confirm', handleCustomerConfirmOrder);
 app.post('/api/orders/:trackingId/confirm', handleCustomerConfirmOrder);
@@ -495,14 +503,14 @@ app.get('/api/admin/orders/:id', requireAdminAuth, (req: Request, res: Response)
 });
 
 // Update order status
-app.patch('/api/admin/orders/:id/status', requireAdminAuth, (req: Request, res: Response): void => {
+app.patch('/api/admin/orders/:id/status', requireAdminAuth, asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { status, note } = req.body;
   if (!status) {
     res.status(400).json({ error: 'Status is required' });
     return;
   }
 
-  const updated = updateOrderStatus(req.params.id, status, note);
+  const updated = await updateOrderStatus(req.params.id, status, note);
   if (!updated) {
     res.status(404).json({ error: 'Order not found' });
     return;
@@ -521,17 +529,17 @@ app.patch('/api/admin/orders/:id/status', requireAdminAuth, (req: Request, res: 
   };
 
   res.json({ success: true, order: updated, summary });
-});
+}));
 
 // Update quote amount & auto-set status to 'Quote Sent'
-app.patch('/api/admin/orders/:id/quote', requireAdminAuth, (req: Request, res: Response): void => {
+app.patch('/api/admin/orders/:id/quote', requireAdminAuth, asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const quoteAmount = parseFloat(req.body.quoteAmount);
   if (isNaN(quoteAmount) || quoteAmount <= 0) {
     res.status(400).json({ error: 'Valid positive quote amount is required' });
     return;
   }
 
-  const updated = updateOrderQuote(req.params.id, quoteAmount);
+  const updated = await updateOrderQuote(req.params.id, quoteAmount);
   if (!updated) {
     res.status(404).json({ error: 'Order not found' });
     return;
@@ -550,10 +558,10 @@ app.patch('/api/admin/orders/:id/quote', requireAdminAuth, (req: Request, res: R
   };
 
   res.json({ success: true, order: updated, summary });
-});
+}));
 
 // Delete an order permanently
-app.delete('/api/admin/orders/:id', requireAdminAuth, (req: Request, res: Response): void => {
+app.delete('/api/admin/orders/:id', requireAdminAuth, asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const order = getOrderById(req.params.id);
   if (!order) {
     res.status(404).json({ error: 'Order not found' });
@@ -572,7 +580,7 @@ app.delete('/api/admin/orders/:id', requireAdminAuth, (req: Request, res: Respon
     }
   }
 
-  const success = deleteOrder(req.params.id);
+  const success = await deleteOrder(req.params.id);
   if (!success) {
     res.status(404).json({ error: 'Order not found or already deleted' });
     return;
@@ -597,7 +605,7 @@ app.delete('/api/admin/orders/:id', requireAdminAuth, (req: Request, res: Respon
     deletedTrackingId: order.trackingId,
     summary,
   });
-});
+}));
 
 // Securely download customer's uploaded file (Image or STL)
 app.get('/api/admin/orders/:id/download-file', requireAdminAuth, (req: Request, res: Response): void => {
@@ -663,14 +671,14 @@ app.get('/api/products/:id', (req: Request, res: Response): void => {
 });
 
 // Admin endpoint: add new product to canonical database
-app.post('/api/products', requireAdminAuth, (req: Request, res: Response): void => {
+app.post('/api/products', requireAdminAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, price, category } = req.body;
     if (!name || price === undefined || !category) {
       res.status(400).json({ error: 'Name, price, and category are required' });
       return;
     }
-    const newProduct = createProduct(req.body);
+    const newProduct = await createProduct(req.body);
     res.status(201).json({ success: true, product: newProduct });
   } catch (err: any) {
     res.status(500).json({ error: err?.message || 'Failed to create product' });
@@ -678,9 +686,9 @@ app.post('/api/products', requireAdminAuth, (req: Request, res: Response): void 
 });
 
 // Admin endpoint: update existing product in canonical database
-app.put('/api/products/:id', requireAdminAuth, (req: Request, res: Response): void => {
+app.put('/api/products/:id', requireAdminAuth, async (req: Request, res: Response): Promise<void> => {
   try {
-    const updated = updateProduct(req.params.id, req.body);
+    const updated = await updateProduct(req.params.id, req.body);
     if (!updated) {
       res.status(404).json({ error: 'Product not found' });
       return;
@@ -692,9 +700,9 @@ app.put('/api/products/:id', requireAdminAuth, (req: Request, res: Response): vo
 });
 
 // Admin endpoint: delete product from canonical database
-app.delete('/api/products/:id', requireAdminAuth, (req: Request, res: Response): void => {
+app.delete('/api/products/:id', requireAdminAuth, async (req: Request, res: Response): Promise<void> => {
   try {
-    const deleted = deleteProduct(req.params.id);
+    const deleted = await deleteProduct(req.params.id);
     if (!deleted) {
       res.status(404).json({ error: 'Product not found' });
       return;
@@ -1001,6 +1009,9 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 async function startServer() {
   const isProduction = process.env.NODE_ENV === 'production';
+
+  // Load the durable data from Firestore before serving any request.
+  await hydrateFromFirestore();
 
   if (!isProduction) {
     // Dynamic import of vite in dev mode

@@ -315,27 +315,112 @@ export function readOrders(): OrderRecord[] {
   }
 }
 
+// Local JSON files act as a fast synchronous cache. Firestore is the durable
+// source of truth: the cache is rebuilt from it on startup (hydrateFromFirestore)
+// and every mutation is written through to it before the request completes.
 export function writeOrders(orders: OrderRecord[]): void {
   try {
     const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
     fs.writeFileSync(tempFile, JSON.stringify(orders, null, 2), 'utf-8');
     fs.renameSync(tempFile, DB_FILE);
-
-    // Asynchronously replicate orders to Firestore for real-time synchronization
-    if (adminDb) {
-      Promise.all(
-        orders.slice(0, 50).map(async (order) => {
-          try {
-            await adminDb!.collection('orders').doc(order.id).set(order, { merge: true });
-          } catch (e) {
-            // Ignore background sync errors
-          }
-        })
-      ).catch(() => {});
-    }
   } catch (err) {
     console.error('Error writing orders DB:', err);
     throw err;
+  }
+}
+
+// ==========================================
+// FIRESTORE PERSISTENCE
+// ==========================================
+
+type SyncedCollection = 'orders' | 'products';
+
+const FIRESTORE_TIMEOUT_MS = 10000;
+
+function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timed out after ${FIRESTORE_TIMEOUT_MS}ms`)), FIRESTORE_TIMEOUT_MS)
+    ),
+  ]);
+}
+
+// Firestore rejects `undefined` values, so strip them before saving.
+function toFirestoreData<T>(record: T): Record<string, unknown> {
+  return JSON.parse(JSON.stringify(record));
+}
+
+// Never throws: a Firestore outage must not break the storefront, but it is logged loudly.
+async function saveDoc(collection: SyncedCollection, id: string, record: unknown): Promise<void> {
+  if (!adminDb) return;
+  try {
+    await withTimeout(adminDb.collection(collection).doc(id).set(toFirestoreData(record)), `Firestore save ${collection}/${id}`);
+  } catch (err) {
+    console.error(`[persistence] Failed to save ${collection}/${id} to Firestore:`, err);
+  }
+}
+
+async function removeDoc(collection: SyncedCollection, id: string): Promise<void> {
+  if (!adminDb) return;
+  try {
+    await withTimeout(adminDb.collection(collection).doc(id).delete(), `Firestore delete ${collection}/${id}`);
+  } catch (err) {
+    console.error(`[persistence] Failed to delete ${collection}/${id} from Firestore:`, err);
+  }
+}
+
+async function hydrateCollection<T extends { id: string }>(
+  collection: SyncedCollection,
+  readLocal: () => T[],
+  writeLocal: (records: T[]) => void,
+  sortRecords: (records: T[], local: T[]) => T[]
+): Promise<void> {
+  const snapshot = await withTimeout(adminDb!.collection(collection).get(), `Firestore load ${collection}`);
+  const local = readLocal();
+
+  if (snapshot.empty) {
+    // First run against an empty database: seed it from the local files.
+    await Promise.all(local.map((record) => saveDoc(collection, record.id, record)));
+    console.log(`[persistence] Seeded Firestore ${collection} with ${local.length} local record(s)`);
+    return;
+  }
+
+  const remote = snapshot.docs.map((doc) => ({ ...(doc.data() as T), id: doc.id }));
+  writeLocal(sortRecords(remote, local));
+  console.log(`[persistence] Loaded ${remote.length} ${collection} from Firestore`);
+}
+
+/**
+ * Rebuilds the local cache from Firestore. Call once before the server starts
+ * accepting requests, so a fresh Cloud Run container serves the real data
+ * instead of the files baked into the image.
+ */
+export async function hydrateFromFirestore(): Promise<void> {
+  if (!adminDb) {
+    console.warn('[persistence] Firestore unavailable; using local JSON files only (data will not survive restarts)');
+    return;
+  }
+
+  try {
+    await hydrateCollection<OrderRecord>('orders', readOrders, writeOrders, (remote) =>
+      // Newest first, matching how createOrder inserts.
+      remote.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
+    );
+  } catch (err) {
+    console.error('[persistence] Could not load orders from Firestore; using local file:', err);
+  }
+
+  try {
+    await hydrateCollection<ProductRecord>('products', readProducts, writeProducts, (remote, local) => {
+      // Keep the existing catalog order; products added later go at the end.
+      const position = new Map(local.map((p, i) => [p.id, i]));
+      return remote.sort(
+        (a, b) => (position.get(a.id) ?? Infinity) - (position.get(b.id) ?? Infinity) || a.id.localeCompare(b.id)
+      );
+    });
+  } catch (err) {
+    console.error('[persistence] Could not load products from Firestore; using local file:', err);
   }
 }
 
@@ -388,9 +473,9 @@ export function matchPhoneNumbers(inputPhone: string, storedPhone?: string): boo
   return false;
 }
 
-export function createOrder(data: Omit<OrderRecord, 'id' | 'trackingId' | 'createdAt' | 'updatedAt' | 'statusHistory' | 'status'> & {
+export async function createOrder(data: Omit<OrderRecord, 'id' | 'trackingId' | 'createdAt' | 'updatedAt' | 'statusHistory' | 'status'> & {
   status?: OrderStatus;
-}): OrderRecord {
+}): Promise<OrderRecord> {
   const orders = readOrders();
   const now = new Date().toISOString();
   const trackingId = generateTrackingId();
@@ -425,6 +510,7 @@ export function createOrder(data: Omit<OrderRecord, 'id' | 'trackingId' | 'creat
 
   orders.unshift(newOrder);
   writeOrders(orders);
+  await saveDoc('orders', newOrder.id, newOrder);
   return newOrder;
 }
 
@@ -439,7 +525,7 @@ export function getOrderByTrackingId(trackingId: string): OrderRecord | null {
   return orders.find((o) => o.trackingId.toUpperCase() === normalized) || null;
 }
 
-export function updateOrderStatus(id: string, status: string, note?: string): OrderRecord | null {
+export async function updateOrderStatus(id: string, status: string, note?: string): Promise<OrderRecord | null> {
   const orders = readOrders();
   const index = orders.findIndex((o) => o.id === id);
   if (index === -1) return null;
@@ -514,10 +600,11 @@ export function updateOrderStatus(id: string, status: string, note?: string): Or
 
   orders[index] = updated;
   writeOrders(orders);
+  await saveDoc('orders', updated.id, updated);
   return updated;
 }
 
-export function updateOrderQuote(id: string, quoteAmount: number): OrderRecord | null {
+export async function updateOrderQuote(id: string, quoteAmount: number): Promise<OrderRecord | null> {
   const orders = readOrders();
   const index = orders.findIndex((o) => o.id === id);
   if (index === -1) return null;
@@ -561,10 +648,11 @@ export function updateOrderQuote(id: string, quoteAmount: number): OrderRecord |
 
   orders[index] = updated;
   writeOrders(orders);
+  await saveDoc('orders', updated.id, updated);
   return updated;
 }
 
-export function confirmOrderByTrackingId(trackingId: string, note?: string): OrderRecord | null {
+export async function confirmOrderByTrackingId(trackingId: string, note?: string): Promise<OrderRecord | null> {
   const orders = readOrders();
   const index = orders.findIndex(
     (o) => o.trackingId.toLowerCase() === trackingId.trim().toLowerCase()
@@ -601,16 +689,18 @@ export function confirmOrderByTrackingId(trackingId: string, note?: string): Ord
 
   orders[index] = updated;
   writeOrders(orders);
+  await saveDoc('orders', updated.id, updated);
   return updated;
 }
 
-export function deleteOrder(id: string): boolean {
+export async function deleteOrder(id: string): Promise<boolean> {
   const orders = readOrders();
   const index = orders.findIndex((o) => o.id === id);
   if (index === -1) return false;
 
   orders.splice(index, 1);
   writeOrders(orders);
+  await removeDoc('orders', id);
   return true;
 }
 
@@ -642,19 +732,6 @@ export function writeProducts(products: ProductRecord[]): void {
     const tempFile = `${PRODUCTS_FILE}.tmp.${Date.now()}`;
     fs.writeFileSync(tempFile, JSON.stringify(products, null, 2), 'utf-8');
     fs.renameSync(tempFile, PRODUCTS_FILE);
-
-    // Asynchronously replicate products to Firestore
-    if (adminDb) {
-      Promise.all(
-        products.map(async (prod) => {
-          try {
-            await adminDb!.collection('products').doc(prod.id).set(prod, { merge: true });
-          } catch {
-            // Ignore
-          }
-        })
-      ).catch(() => {});
-    }
   } catch (err) {
     console.error('Error writing products DB:', err);
     throw err;
@@ -670,7 +747,7 @@ export function getProductRecordById(id: string): ProductRecord | null {
   return products.find((p) => p.id === id) || null;
 }
 
-export function createProduct(data: Partial<ProductRecord>): ProductRecord {
+export async function createProduct(data: Partial<ProductRecord>): Promise<ProductRecord> {
   const products = readProducts();
   const id = (data.id && data.id.trim()) || `prod-${Date.now()}`;
   const price = typeof data.price === 'number' ? data.price : parseFloat(data.price as any) || 0;
@@ -718,10 +795,11 @@ export function createProduct(data: Partial<ProductRecord>): ProductRecord {
 
   products.push(newProduct);
   writeProducts(products);
+  await saveDoc('products', newProduct.id, newProduct);
   return newProduct;
 }
 
-export function updateProduct(id: string, updates: Partial<ProductRecord>): ProductRecord | null {
+export async function updateProduct(id: string, updates: Partial<ProductRecord>): Promise<ProductRecord | null> {
   const products = readProducts();
   const index = products.findIndex((p) => p.id === id);
   if (index === -1) return null;
@@ -745,13 +823,15 @@ export function updateProduct(id: string, updates: Partial<ProductRecord>): Prod
 
   products[index] = updated;
   writeProducts(products);
+  await saveDoc('products', updated.id, updated);
   return updated;
 }
 
-export function deleteProduct(id: string): boolean {
+export async function deleteProduct(id: string): Promise<boolean> {
   const products = readProducts();
   const filtered = products.filter((p) => p.id !== id);
   if (filtered.length === products.length) return false;
   writeProducts(filtered);
+  await removeDoc('products', id);
   return true;
 }
