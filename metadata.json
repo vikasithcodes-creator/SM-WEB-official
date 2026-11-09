@@ -1,6 +1,0 @@
-{
-  "name": "SM Studios",
-  "description": "Specialized 3D printing studio crafted for sacred god idols, custom STL/OBJ print-on-demand manufacturing, and gaming accessories like PS5/Xbox controller holders and desk docks.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

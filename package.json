@@ -1,14 +1,15 @@
 {
-  "name": "react-example",
+  "name": "sm-studios-web",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build",
-    "start": "tsx server.ts",
+    "build": "vite build && npm run build:server",
+    "build:server": "esbuild server.ts --bundle --platform=node --format=esm --packages=external --outfile=build/server.js",
+    "start": "node build/server.js",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
+    "clean": "rm -rf dist build",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
