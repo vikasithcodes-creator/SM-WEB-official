@@ -1,0 +1,69 @@
+[
+  {
+    "customerName": "Vikasith Sunkapaka",
+    "email": "vikasithcodes@gmail.com",
+    "phone": "+919849216272",
+    "address": "jamai osmania railway station main road",
+    "city": "Hyderabad",
+    "postalCode": "500061",
+    "priorityQueue": "standard",
+    "orderType": "Standard Figurine",
+    "hasCustomJob": false,
+    "colour": "gold-leaf",
+    "quantity": 1,
+    "quoteAmount": 1499,
+    "items": [
+      {
+        "id": "fig-01-gold-leaf-120mm",
+        "figurineId": "fig-01",
+        "name": "LORD VENKATESWARA (BALAJI)",
+        "category": "god-idols",
+        "src": "/src/assets/images/balaji_golden_idol.png",
+        "price": 1499,
+        "quantity": 1,
+        "finish": "gold-leaf",
+        "scale": "120mm"
+      }
+    ],
+    "subtotal": 1499,
+    "discount": 0,
+    "shipping": 0,
+    "total": 1499,
+    "id": "ord_1790517669499_nwanj2",
+    "trackingId": "TH-3D-689635",
+    "status": "In Production",
+    "createdAt": "2026-09-27T14:01:09.498Z",
+    "updatedAt": "2026-09-27T14:27:32.590Z",
+    "statusHistory": [
+      {
+        "orderId": "ord_1790517669499_nwanj2",
+        "type": "CONFIRMED",
+        "status": "Confirmed",
+        "timestamp": "2026-09-27T14:01:09.498Z",
+        "note": "Order confirmed & placed by customer"
+      },
+      {
+        "orderId": "ord_1790517669499_nwanj2",
+        "type": "QUOTE_SENT",
+        "status": "Quote Sent",
+        "timestamp": "2026-09-27T14:03:00.327Z",
+        "note": "Quote provided: ₹1,499"
+      },
+      {
+        "orderId": "ord_1790517669499_nwanj2",
+        "type": "CONFIRMED",
+        "status": "Confirmed",
+        "timestamp": "2026-09-27T14:26:37.692Z",
+        "note": "Order confirmed by customer"
+      },
+      {
+        "orderId": "ord_1790517669499_nwanj2",
+        "type": "IN_PRODUCTION",
+        "status": "In Production",
+        "timestamp": "2026-09-27T14:27:32.590Z",
+        "note": "Order moved to In Production"
+      }
+    ],
+    "quoteUpdatedAt": "2026-09-27T14:03:00.327Z"
+  }
+]

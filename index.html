@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      /* Fix for "Cannot set property fetch of #<Window> which has only a getter" in iframe environments */
+      (function () {
+        try {
+          var _rawFetch = window.fetch;
+          var _currentFetch = typeof _rawFetch === 'function' ? _rawFetch.bind(window) : _rawFetch;
+
+          function defineFetch(obj) {
+            if (!obj) return;
+            try {
+              Object.defineProperty(obj, 'fetch', {
+                get: function () {
+                  return _currentFetch;
+                },
+                set: function (fn) {
+                  _currentFetch = fn;
+                },
+                configurable: true,
+                enumerable: true
+              });
+            } catch (e) {}
+          }
+
+          defineFetch(window);
+          if (typeof globalThis !== 'undefined' && globalThis !== window) {
+            defineFetch(globalThis);
+          }
+          if (window.__proto__) {
+            defineFetch(window.__proto__);
+          }
+          if (typeof Window !== 'undefined' && Window.prototype) {
+            defineFetch(Window.prototype);
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SM Studios - Sacred God Idols, Custom 3D Prints & PS Controller Holders</title>
+    <meta name="description" content="Specialized 3D printing studio crafted for sacred god idols, custom STL/OBJ print-on-demand manufacturing, and gaming accessories like PS5/Xbox controller holders and desk docks." />
+    <meta property="og:title" content="SM Studios - Sacred God Idols, Custom 3D Prints & PS Controller Holders" />
+    <meta property="og:description" content="Specialized 3D printing studio crafted for sacred god idols, custom STL/OBJ print-on-demand manufacturing, and gaming accessories like PS5/Xbox controller holders and desk docks." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

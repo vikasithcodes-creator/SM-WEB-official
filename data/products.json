@@ -1,0 +1,254 @@
+[
+  {
+    "id": "fig-01",
+    "name": "LORD VENKATESWARA (BALAJI)",
+    "subtitle": "Golden Divine Standing Murti • Blessing & Prosperity Idol",
+    "category": "god-idols",
+    "categoryLabel": "Sacred God Idol",
+    "edition": "Divine Gold Edition • In Stock",
+    "price": 1499,
+    "basePrice": 1499,
+    "image": "/src/assets/images/balaji_golden_idol.png",
+    "src": "/src/assets/images/balaji_golden_idol.png",
+    "bg": "#C97A1E",
+    "panel": "#D98A2C",
+    "dimensions": "150mm × 75mm × 65mm",
+    "printTech": "Ultra-Fine Silk Gold 3D Filament & SLA Resin",
+    "layerHeight": "0.025 mm (25 microns)",
+    "weight": "185g solid core with circular stand",
+    "leadTime": "Ready in Stock • Dispatches in 24 Hours",
+    "description": "Intricately 3D printed standing idol of Lord Venkateswara (Tirupati Balaji) in lustrous silk gold, featuring the sacred crown, Shankha & Chakra, and hands joined in Anjali prayer.",
+    "available": true,
+    "featured": true,
+    "highlights": [
+      "Ornate crown (mukut) & Urdhva Pundra tilak",
+      "Four-armed iconography holding Shankha and Chakra",
+      "Gleaming silk gold finish with high-precision layer fidelity",
+      "Stable integrated circular display pedestal"
+    ],
+    "idealPlacement": "Home Mandir Altar, Pooja Shelf, Living Room Showcase",
+    "availableFinishes": [
+      {
+        "key": "gold-leaf",
+        "label": "Silk Gold Finish",
+        "priceDelta": 0
+      },
+      {
+        "key": "antique-brass",
+        "label": "Antique Gold Patina",
+        "priceDelta": 0
+      },
+      {
+        "key": "hand-painted",
+        "label": "Hand-Detailed Accents",
+        "priceDelta": 0
+      }
+    ],
+    "availableScales": [
+      {
+        "key": "120mm",
+        "label": "120mm Compact",
+        "priceDelta": 0
+      },
+      {
+        "key": "160mm",
+        "label": "160mm Standard",
+        "priceDelta": 0
+      },
+      {
+        "key": "200mm (Grand Altar)",
+        "label": "200mm Grand",
+        "priceDelta": 0
+      }
+    ]
+  },
+  {
+    "id": "fig-02",
+    "name": "BAL GANESHA WITH SHIVLING",
+    "subtitle": "Golden & Black Little Ganesha Embracing Sacred Shiva Lingam",
+    "category": "god-idols",
+    "categoryLabel": "Sacred God Idol",
+    "edition": "Divine Gold Edition • In Stock",
+    "price": 999,
+    "basePrice": 999,
+    "image": "/src/assets/images/ganesha_shivling_idol.png",
+    "src": "/src/assets/images/ganesha_shivling_idol.png",
+    "bg": "#D84A1B",
+    "panel": "#E65D30",
+    "dimensions": "110mm × 70mm × 70mm",
+    "printTech": "High-Precision Multi-Tone SLA Resin & Filament",
+    "layerHeight": "0.025 mm (25 microns)",
+    "weight": "160g solid core with pedestal",
+    "leadTime": "Ready in Stock • Dispatches in 24 Hours",
+    "description": "Adorable Bal Ganesha affectionately holding the sacred Shiva Lingam in both hands. Crafted with glossy black hair detailing and a shimmering metallic gold body.",
+    "available": true,
+    "featured": true,
+    "highlights": [
+      "Cute Bal Ganesha hugging holy Shiva Lingam",
+      "Dual-tone metallic gold body with deep black hair",
+      "Perfect size for car dashboard, office desk, or pooja altar",
+      "Weighted pedestal base for vibration-resistant stability"
+    ],
+    "idealPlacement": "Car Dashboard, Work Desk, Mandir Altar",
+    "availableFinishes": [
+      {
+        "key": "gold-leaf",
+        "label": "Classic Gold & Black Finish",
+        "priceDelta": 0
+      },
+      {
+        "key": "antique-brass",
+        "label": "Antique Patina Brass",
+        "priceDelta": 0
+      },
+      {
+        "key": "hand-painted",
+        "label": "Hand-Detailed Accents",
+        "priceDelta": 0
+      }
+    ],
+    "availableScales": [
+      {
+        "key": "75mm (Car Dashboard)",
+        "label": "75mm Dashboard",
+        "priceDelta": 0
+      },
+      {
+        "key": "120mm",
+        "label": "120mm Standard",
+        "priceDelta": 0
+      },
+      {
+        "key": "160mm",
+        "label": "160mm Grand",
+        "priceDelta": 0
+      }
+    ]
+  },
+  {
+    "id": "fig-03",
+    "name": "GODDESS MAHALAKSHMI",
+    "subtitle": "Pristine White Lotus Murti • Goddess of Wealth & Prosperity",
+    "category": "god-idols",
+    "categoryLabel": "Sacred God Idol",
+    "edition": "Pure White Sacred Series • In Stock",
+    "price": 1499,
+    "basePrice": 1499,
+    "image": "/src/assets/images/lakshmi_lotus_idol.png",
+    "src": "/src/assets/images/lakshmi_lotus_idol.png",
+    "bg": "#B8235A",
+    "panel": "#D43973",
+    "dimensions": "130mm × 90mm × 85mm",
+    "printTech": "Pristine White High-Density SLA Marble Resin",
+    "layerHeight": "0.020 mm (20 microns)",
+    "weight": "195g weighted lotus base",
+    "leadTime": "Ready in Stock • Dispatches in 24 Hours",
+    "description": "Exquisite 3D printed murti of Goddess Mahalakshmi seated peacefully in padmasana upon an intricately sculpted blooming lotus flower, holding lotus blossoms and pouring prosperity coins.",
+    "available": true,
+    "featured": true,
+    "highlights": [
+      "Detailed multi-petal blooming lotus pedestal",
+      "Four-armed posture with coin pot & Abhaya mudra",
+      "Pristine matte marble-like white resin finish",
+      "Washable, fade-resistant pooja sculpture"
+    ],
+    "idealPlacement": "Home Mandir Altar, Diwali Pooja, Prosperity Gift",
+    "availableFinishes": [
+      {
+        "key": "pure-marble-white",
+        "label": "Pristine Marble White",
+        "priceDelta": 0
+      },
+      {
+        "key": "gold-leaf",
+        "label": "White with Gold Leaf",
+        "priceDelta": 0
+      },
+      {
+        "key": "hand-painted",
+        "label": "Hand Detailed",
+        "priceDelta": 0
+      }
+    ],
+    "availableScales": [
+      {
+        "key": "120mm",
+        "label": "120mm Compact",
+        "priceDelta": 0
+      },
+      {
+        "key": "130mm (Home Mandir)",
+        "label": "130mm Standard",
+        "priceDelta": 0
+      },
+      {
+        "key": "200mm (Grand Altar)",
+        "label": "200mm Grand",
+        "priceDelta": 0
+      }
+    ]
+  },
+  {
+    "id": "fig-04",
+    "name": "BAL KRISHNA WITH FLUTE",
+    "subtitle": "Golden Laddu Gopal with Bansuri & Butter Matki",
+    "category": "god-idols",
+    "categoryLabel": "Sacred God Idol",
+    "edition": "Divine Gold Edition • In Stock",
+    "price": 1199,
+    "basePrice": 1199,
+    "image": "/src/assets/images/bal_krishna_flute_idol.png",
+    "src": "/src/assets/images/bal_krishna_flute_idol.png",
+    "bg": "#0284C7",
+    "panel": "#0EA5E9",
+    "dimensions": "120mm × 80mm × 75mm",
+    "printTech": "Ultra-Fine Gold Luster 3D Resin & Filament",
+    "layerHeight": "0.025 mm (25 microns)",
+    "weight": "170g solid core",
+    "leadTime": "Ready in Stock • Dispatches in 24 Hours",
+    "description": "Joyful Little Krishna (Makhan Chor) playing the sweet melody of the golden flute, wearing a mukut adorned with a peacock feather, seated beside his beloved overflowing pot of butter.",
+    "available": true,
+    "featured": true,
+    "highlights": [
+      "Detailed flute (bansuri) and butter pot (matki)",
+      "Ornate peacock feather (mor pankh) turban detail",
+      "Radiant golden luster with warm tonal depth",
+      "Ideal sacred gift for Janmashtami, housewarming & pooja"
+    ],
+    "idealPlacement": "Home Mandir, Children Room, Pooja Shelf",
+    "availableFinishes": [
+      {
+        "key": "gold-leaf",
+        "label": "Radiant Silk Gold",
+        "priceDelta": 0
+      },
+      {
+        "key": "antique-brass",
+        "label": "Antique Patina Finish",
+        "priceDelta": 0
+      },
+      {
+        "key": "hand-painted",
+        "label": "Hand-Detailed Accents",
+        "priceDelta": 0
+      }
+    ],
+    "availableScales": [
+      {
+        "key": "75mm (Car Dashboard)",
+        "label": "75mm Compact",
+        "priceDelta": 0
+      },
+      {
+        "key": "120mm",
+        "label": "120mm Standard",
+        "priceDelta": 0
+      },
+      {
+        "key": "160mm",
+        "label": "160mm Grand",
+        "priceDelta": 0
+      }
+    ]
+  }
+]
