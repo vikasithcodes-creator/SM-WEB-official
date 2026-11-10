@@ -7,7 +7,12 @@ let adminApp: App | null = null;
 let adminDb: Firestore | null = null;
 let adminAuth: Auth | null = null;
 
-try {
+// SM_LOCAL_ONLY=1 runs the server on the local JSON files only, with no Firebase
+// connection — for local development without Google credentials (and without
+// touching live production orders).
+if (process.env.SM_LOCAL_ONLY === '1') {
+  console.log('SM_LOCAL_ONLY=1: Firebase Admin disabled, using local JSON data only');
+} else try {
   if (getApps().length === 0) {
     adminApp = initializeApp({
       projectId: firebaseConfig.projectId,
