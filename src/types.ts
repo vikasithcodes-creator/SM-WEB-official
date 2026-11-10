@@ -38,6 +38,7 @@ export interface Product {
 
   // Unified visual, crafting and presentation attributes
   src: string; // alias to image for visual consumers
+  heroImage?: string; // cut-out image used in the homepage hero carousel instead of `image`
   gallery?: string[]; // extra photo angles shown in the product modal (first entry = main image)
   basePrice?: number; // backwards-compatible alias to price
   subtitle?: string;

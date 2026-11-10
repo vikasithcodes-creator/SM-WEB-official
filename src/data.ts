@@ -1,5 +1,9 @@
 import { Product, ReviewItem, CartItem } from './types';
 import lakshmiLotusImg from './assets/images/lakshmi_lotus_idol.png';
+// Original cut-out renders used in the homepage hero carousel.
+import balajiHeroImg from './assets/images/balaji_golden_idol.png';
+import ganeshaHeroImg from './assets/images/ganesha_shivling_idol.png';
+import krishnaHeroImg from './assets/images/bal_krishna_flute_idol.png';
 
 // Real studio photos (background removed, AI-upscaled to 4K). Each photo is stored in three sizes,
 // named <product>-<n>-<tier>-<pixel width>.webp: tier sm (800px), md (1600px) or 4k (3840px long side).
@@ -44,6 +48,9 @@ export const getProductSrcSet = (src?: string): string | undefined => (src ? SRC
 export const getProductThumb = (src?: string): string | undefined => (src && THUMBNAILS[src]) || src;
 
 /** Rendered width of the homepage carousel's main image (it is scaled up with CSS transforms). */
+/** Image shown for a product in the homepage hero carousel. */
+export const getHeroImage = (item: Product): string => item.heroImage || item.image || item.src;
+
 export const heroImageSizes = (isMobile: boolean): string => (isMobile ? '40vh' : '85vh');
 
 const balajiPhotos = photos('balaji');
@@ -87,6 +94,7 @@ export const PRODUCTS: Product[] = [
     image: balajiPhotos[0],
     src: balajiPhotos[0],
     gallery: balajiPhotos,
+    heroImage: balajiHeroImg,
     bg: '#C97A1E',
     panel: '#D98A2C',
     dimensions: '150mm × 75mm × 65mm',
@@ -128,6 +136,7 @@ export const PRODUCTS: Product[] = [
     image: balGaneshaPhotos[0],
     src: balGaneshaPhotos[0],
     gallery: balGaneshaPhotos,
+    heroImage: ganeshaHeroImg,
     bg: '#D84A1B',
     panel: '#E65D30',
     dimensions: '110mm × 70mm × 70mm',
@@ -209,6 +218,7 @@ export const PRODUCTS: Product[] = [
     image: balKrishnaPhotos[0],
     src: balKrishnaPhotos[0],
     gallery: balKrishnaPhotos,
+    heroImage: krishnaHeroImg,
     bg: '#0284C7',
     panel: '#0EA5E9',
     dimensions: '120mm × 80mm × 75mm',
