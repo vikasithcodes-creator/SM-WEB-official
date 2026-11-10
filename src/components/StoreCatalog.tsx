@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Product } from '../types';
 import { formatINR } from '../utils';
+import { getProductSrcSet, getProductThumb } from '../data';
 import { CatalogSidebar, MinimalCategory } from './CatalogSidebar';
 
 interface StoreCatalogProps {
@@ -285,6 +286,9 @@ export const StoreCatalog: React.FC<StoreCatalogProps> = ({
         <div className="w-full aspect-square relative rounded-2xl bg-neutral-50 border border-gray-100 flex items-center justify-center p-5 overflow-hidden transition-all duration-300 group-hover:bg-neutral-100/70 group-hover:border-gray-200">
           <img
             src={item.image || item.src}
+            srcSet={getProductSrcSet(item.image || item.src)}
+            sizes="(min-width: 1280px) 280px, (min-width: 640px) 45vw, 90vw"
+            loading="lazy"
             alt={item.name}
             referrerPolicy="no-referrer"
             className="w-full h-full object-contain object-bottom transition-transform duration-500 ease-out group-hover:scale-105"
@@ -493,6 +497,8 @@ export const StoreCatalog: React.FC<StoreCatalogProps> = ({
                 <div className="w-full aspect-square flex items-center justify-center overflow-hidden">
                   <img
                     src={shownImage}
+                    srcSet={getProductSrcSet(shownImage)}
+                    sizes="(min-width: 768px) 320px, 85vw"
                     alt={item.name}
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-contain object-bottom"
@@ -511,7 +517,7 @@ export const StoreCatalog: React.FC<StoreCatalogProps> = ({
                           img === shownImage ? 'border-black' : 'border-gray-200 hover:border-gray-400'
                         }`}
                       >
-                        <img src={img} alt="" className="w-full h-full object-contain" />
+                        <img src={getProductThumb(img)} alt="" className="w-full h-full object-contain" />
                       </button>
                     ))}
                   </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { CarouselRole, Product } from '../types';
+import { getProductSrcSet, heroImageSizes } from '../data';
 
 interface CarouselItemProps {
   item: Product;
@@ -101,6 +102,8 @@ export const CarouselItem: React.FC<CarouselItemProps> = ({
     >
       <img
         src={item.image || item.src}
+        srcSet={getProductSrcSet(item.image || item.src)}
+        sizes={heroImageSizes(isMobile)}
         alt={item.name}
         referrerPolicy="no-referrer"
         draggable={false}

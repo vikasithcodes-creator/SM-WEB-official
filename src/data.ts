@@ -1,17 +1,50 @@
 import { Product, ReviewItem, CartItem } from './types';
 import lakshmiLotusImg from './assets/images/lakshmi_lotus_idol.png';
 
-// Real studio photos (background removed), named <product>-<n>.webp; -1 is the main shot.
+// Real studio photos (background removed, AI-upscaled to 4K). Each photo is stored in three sizes,
+// named <product>-<n>-<tier>-<pixel width>.webp: tier sm (800px), md (1600px) or 4k (3840px long side).
+// -1 is the main shot. The md file is the default src; srcset lets the browser pick the size it needs.
 const PRODUCT_PHOTOS = import.meta.glob<string>('./assets/images/products/*.webp', {
   eager: true,
   import: 'default',
 });
 
+type PhotoTier = 'sm' | 'md' | '4k';
+type PhotoVariants = Partial<Record<PhotoTier, { url: string; width: number }>>;
+
+const PHOTO_VARIANTS: Record<string, Record<number, PhotoVariants>> = {};
+for (const [path, url] of Object.entries(PRODUCT_PHOTOS)) {
+  const match = /^(.+)-(\d+)-(sm|md|4k)-(\d+)\.webp$/.exec(path.split('/').pop()!);
+  if (!match) continue;
+  const [, slug, index, tier, width] = match;
+  ((PHOTO_VARIANTS[slug] ??= {})[Number(index)] ??= {})[tier as PhotoTier] = { url, width: Number(width) };
+}
+
+const SRCSETS: Record<string, string> = {};
+const THUMBNAILS: Record<string, string> = {};
+
+/** Main-size URLs for a product's photos, in shot order; also registers their srcset and thumbnail. */
 const photos = (slug: string): string[] =>
-  Object.keys(PRODUCT_PHOTOS)
-    .filter((path) => /^(.*)-(\d+)\.webp$/.exec(path.split('/').pop()!)?.[1] === slug)
-    .sort((a, b) => parseInt(a.match(/-(\d+)\.webp$/)![1], 10) - parseInt(b.match(/-(\d+)\.webp$/)![1], 10))
-    .map((path) => PRODUCT_PHOTOS[path]);
+  Object.entries(PHOTO_VARIANTS[slug] ?? {})
+    .sort(([a], [b]) => Number(a) - Number(b))
+    .map(([, variants]) => {
+      const main = (variants.md ?? variants['4k'] ?? variants.sm)!.url;
+      SRCSETS[main] = (['sm', 'md', '4k'] as PhotoTier[])
+        .filter((tier) => variants[tier])
+        .map((tier) => `${variants[tier]!.url} ${variants[tier]!.width}w`)
+        .join(', ');
+      THUMBNAILS[main] = (variants.sm ?? variants.md)!.url;
+      return main;
+    });
+
+/** srcset (800 / 1600 / 4K) for a product photo URL, or undefined for images without variants. */
+export const getProductSrcSet = (src?: string): string | undefined => (src ? SRCSETS[src] : undefined);
+
+/** Smallest variant of a product photo, for thumbnails and the cart. */
+export const getProductThumb = (src?: string): string | undefined => (src && THUMBNAILS[src]) || src;
+
+/** Rendered width of the homepage carousel's main image (it is scaled up with CSS transforms). */
+export const heroImageSizes = (isMobile: boolean): string => (isMobile ? '40vh' : '85vh');
 
 const balajiPhotos = photos('balaji');
 const balGaneshaPhotos = photos('bal-ganesha');
@@ -227,7 +260,7 @@ export const PRODUCTS: Product[] = [
     description:
       'Serene Bal Hanuman seated cross-legged in meditation, hands resting in dhyana mudra, with a jewelled crown, sacred necklaces and a radiant halo behind. Printed in lustrous silk gold on a carved square pedestal.',
     available: true,
-    featured: true,
+    featured: false,
     highlights: [
       'Peaceful meditating pose with dhyana mudra',
       'Radiant sunburst halo and ornate crown',
@@ -256,7 +289,7 @@ export const PRODUCTS: Product[] = [
     description:
       'The meditating Bal Hanuman, individually hand-painted: white angavastram, saffron dhoti, golden crown and halo, seated on a deep blue prayer mat over a white base.',
     available: true,
-    featured: true,
+    featured: false,
     highlights: [
       'Individually hand-painted by our studio',
       'Saffron, white and gold traditional colours',
@@ -285,7 +318,7 @@ export const PRODUCTS: Product[] = [
     description:
       'A modern, flowing interpretation of Lord Ganesha as the patron of music and arts, playing the veena. The stylised elephant head rises above a textured, gently curved body on a round base.',
     available: true,
-    featured: true,
+    featured: false,
     highlights: [
       'Contemporary abstract Ganesha design',
       'Detailed veena with strings and tuning pegs',
@@ -314,7 +347,7 @@ export const PRODUCTS: Product[] = [
     description:
       'A fully articulated dragon printed in one piece, with jointed segments that curl, coil and wiggle. Rainbow silk filament shifts from pink through gold to green along its spiny body.',
     available: true,
-    featured: true,
+    featured: false,
     highlights: [
       'Print-in-place articulated joints',
       'Colour-shifting rainbow silk filament',
@@ -343,7 +376,7 @@ export const PRODUCTS: Product[] = [
     description:
       'An elegant sculptural vase in matte white: a graceful maiden and swan rise from swirling waves, framed by sweeping petal-like leaves around a flared opening.',
     available: true,
-    featured: true,
+    featured: false,
     highlights: [
       'Sculpted maiden and swan relief',
       'Flowing petal and wave design',
@@ -372,7 +405,7 @@ export const PRODUCTS: Product[] = [
     description:
       'A sculptural table lamp with a twisting white spiral shade that glows softly when lit, set on a fluted silk gold base.',
     available: true,
-    featured: true,
+    featured: false,
     highlights: [
       'Twisted spiral shade for soft, diffused light',
       'Fluted silk gold base',
@@ -394,17 +427,18 @@ export const PRODUCTS: Product[] = [
 export const ALL_PRODUCTS: Product[] = PRODUCTS;
 
 /**
- * Helper to dynamically pull all active products for the homepage hero carousel.
- * Every product added to PRODUCTS is automatically included in the home hero page,
- * ensuring complete 1:1 synchronization between hero and catalog.
+ * Products shown in the homepage hero carousel: those marked `featured: true` (and available).
+ * Falls back to all available products if none are featured, so the carousel is never empty.
  */
 export const getFeaturedProducts = (source: Product[] = PRODUCTS): Product[] => {
   const list = Array.isArray(source) && source.length > 0 ? source : PRODUCTS;
   const active = list.filter((p) => p.available !== false);
+  const featured = active.filter((p) => p.featured);
+  if (featured.length > 0) return featured;
   return active.length > 0 ? active : list;
 };
 
-// Hero Carousel dynamically pulls all catalog products
+// Hero Carousel shows only the featured products
 export const HERO_PRODUCTS: Product[] = getFeaturedProducts(PRODUCTS);
 
 /**

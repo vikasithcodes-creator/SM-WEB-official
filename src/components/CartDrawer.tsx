@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag } from 'lucide-react';
 import { CartItem, Product } from '../types';
 import { formatINR } from '../utils';
-import { getCanonicalProduct, getCartItemPrice, getCartItemName, getCartItemImage, calculateCartSubtotal, PRODUCTS } from '../data';
+import { getCanonicalProduct, getCartItemPrice, getCartItemName, getCartItemImage, calculateCartSubtotal, PRODUCTS, getProductThumb } from '../data';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -123,7 +123,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <div className="w-16 h-20 rounded-lg bg-white p-1 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200">
                     {authoritativeImage ? (
                       <img
-                        src={authoritativeImage}
+                        src={getProductThumb(authoritativeImage)}
                         alt={authoritativeName}
                         referrerPolicy="no-referrer"
                         className="w-full h-full object-contain object-bottom"

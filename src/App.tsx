@@ -19,7 +19,7 @@ import { Toast } from './components/Toast';
 import { TrackOrderModal } from './components/TrackOrderModal';
 import { ChatbotWidget } from './components/ChatbotWidget';
 import { AuthModal } from './components/AuthModal';
-import { PRODUCTS, getFeaturedProducts, ALL_PRODUCTS } from './data';
+import { PRODUCTS, getFeaturedProducts, ALL_PRODUCTS, getProductSrcSet, heroImageSizes } from './data';
 import {
   CarouselRole,
   CartItem,
@@ -138,9 +138,15 @@ export default function App() {
   useEffect(() => {
     heroProducts.forEach((item) => {
       const img = new Image();
+      // Same srcset/sizes as the carousel, so the preloaded file is the one it will display.
+      const srcSet = getProductSrcSet(item.image || item.src);
+      if (srcSet) {
+        img.sizes = heroImageSizes(isMobile);
+        img.srcset = srcSet;
+      }
       img.src = item.image || item.src;
     });
-  }, [heroProducts]);
+  }, [heroProducts, isMobile]);
 
   // Update isMobile state & scroll listener
   useEffect(() => {
