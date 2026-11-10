@@ -722,11 +722,6 @@ app.use('/api/uploads', express.static(UPLOADS_DIR));
 
 const geminiClient = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    },
-  },
 });
 
 // Tool declarations for Gemini
