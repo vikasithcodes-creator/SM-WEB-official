@@ -19,14 +19,14 @@ import { Toast } from './components/Toast';
 import { TrackOrderModal } from './components/TrackOrderModal';
 import { ChatbotWidget } from './components/ChatbotWidget';
 import { AuthModal } from './components/AuthModal';
-import { PRODUCTS, getFeaturedProducts, ALL_PRODUCTS } from './data';
+import { PRODUCTS, getFeaturedProducts, ALL_PRODUCTS, getProductSrcSet, heroImageSizes } from './data';
 import {
   CarouselRole,
   CartItem,
   Product,
   NavigationDirection,
 } from './types';
-import { Heart, Sparkles, Box, ShieldCheck, Car } from 'lucide-react';
+import { Heart, Sparkles, Box, ShieldCheck, Car, Lamp } from 'lucide-react';
 
 // Grain overlay SVG data URI with fractalNoise
 const GRAIN_SVG_DATA_URI = `data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E`;
@@ -138,9 +138,15 @@ export default function App() {
   useEffect(() => {
     heroProducts.forEach((item) => {
       const img = new Image();
+      // Same srcset/sizes as the carousel, so the preloaded file is the one it will display.
+      const srcSet = getProductSrcSet(item.image || item.src);
+      if (srcSet) {
+        img.sizes = heroImageSizes(isMobile);
+        img.srcset = srcSet;
+      }
       img.src = item.image || item.src;
     });
-  }, [heroProducts]);
+  }, [heroProducts, isMobile]);
 
   // Update isMobile state & scroll listener
   useEffect(() => {
@@ -356,10 +362,8 @@ export default function App() {
       scrollToCustomQuote();
     } else {
       const targetId =
-        cat === 'god-idols'
-          ? 'category-section-god-idols'
-          : cat === 'figurines'
-          ? 'category-section-figurines'
+        cat === 'god-idols' || cat === 'figurines' || cat === 'home-decor'
+          ? `category-section-${cat}`
           : 'storefront-catalog';
       const el = document.getElementById(targetId);
       if (el) {
@@ -578,6 +582,15 @@ export default function App() {
             >
               <Box size={14} className="text-gray-700 shrink-0" />
               <span>Art Figurines</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleJumpToCategory('home-decor')}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-gray-50 border border-gray-200 text-gray-900 hover:bg-black hover:text-white hover:border-black transition-all cursor-pointer shadow-xs active:scale-95 shrink-0"
+            >
+              <Lamp size={14} className="text-amber-600 shrink-0" />
+              <span>Home Decor</span>
             </button>
           </div>
         </div>

@@ -1,8 +1,60 @@
 import { Product, ReviewItem, CartItem } from './types';
-import balajiImg from './assets/images/balaji_golden_idol.png';
-import ganeshaShivlingImg from './assets/images/ganesha_shivling_idol.png';
 import lakshmiLotusImg from './assets/images/lakshmi_lotus_idol.png';
-import krishnaFluteImg from './assets/images/bal_krishna_flute_idol.png';
+
+// Real studio photos (background removed, AI-upscaled to 4K). Each photo is stored in three sizes,
+// named <product>-<n>-<tier>-<pixel width>.webp: tier sm (800px), md (1600px) or 4k (3840px long side).
+// -1 is the main shot. The md file is the default src; srcset lets the browser pick the size it needs.
+const PRODUCT_PHOTOS = import.meta.glob<string>('./assets/images/products/*.webp', {
+  eager: true,
+  import: 'default',
+});
+
+type PhotoTier = 'sm' | 'md' | '4k';
+type PhotoVariants = Partial<Record<PhotoTier, { url: string; width: number }>>;
+
+const PHOTO_VARIANTS: Record<string, Record<number, PhotoVariants>> = {};
+for (const [path, url] of Object.entries(PRODUCT_PHOTOS)) {
+  const match = /^(.+)-(\d+)-(sm|md|4k)-(\d+)\.webp$/.exec(path.split('/').pop()!);
+  if (!match) continue;
+  const [, slug, index, tier, width] = match;
+  ((PHOTO_VARIANTS[slug] ??= {})[Number(index)] ??= {})[tier as PhotoTier] = { url, width: Number(width) };
+}
+
+const SRCSETS: Record<string, string> = {};
+const THUMBNAILS: Record<string, string> = {};
+
+/** Main-size URLs for a product's photos, in shot order; also registers their srcset and thumbnail. */
+const photos = (slug: string): string[] =>
+  Object.entries(PHOTO_VARIANTS[slug] ?? {})
+    .sort(([a], [b]) => Number(a) - Number(b))
+    .map(([, variants]) => {
+      const main = (variants.md ?? variants['4k'] ?? variants.sm)!.url;
+      SRCSETS[main] = (['sm', 'md', '4k'] as PhotoTier[])
+        .filter((tier) => variants[tier])
+        .map((tier) => `${variants[tier]!.url} ${variants[tier]!.width}w`)
+        .join(', ');
+      THUMBNAILS[main] = (variants.sm ?? variants.md)!.url;
+      return main;
+    });
+
+/** srcset (800 / 1600 / 4K) for a product photo URL, or undefined for images without variants. */
+export const getProductSrcSet = (src?: string): string | undefined => (src ? SRCSETS[src] : undefined);
+
+/** Smallest variant of a product photo, for thumbnails and the cart. */
+export const getProductThumb = (src?: string): string | undefined => (src && THUMBNAILS[src]) || src;
+
+/** Rendered width of the homepage carousel's main image (it is scaled up with CSS transforms). */
+export const heroImageSizes = (isMobile: boolean): string => (isMobile ? '40vh' : '85vh');
+
+const balajiPhotos = photos('balaji');
+const balGaneshaPhotos = photos('bal-ganesha');
+const balKrishnaPhotos = photos('bal-krishna');
+const hanumanGoldPhotos = photos('hanuman-gold');
+const hanumanPaintedPhotos = photos('hanuman-painted');
+const veenaGaneshaPhotos = photos('veena-ganesha');
+const dragonPhotos = photos('dragon');
+const swanVasePhotos = photos('swan-vase');
+const spiralLampPhotos = photos('spiral-lamp');
 
 /**
  * =========================================================================
@@ -32,8 +84,9 @@ export const PRODUCTS: Product[] = [
     edition: 'Divine Gold Edition • In Stock',
     price: 1499,
     basePrice: 1499,
-    image: balajiImg,
-    src: balajiImg,
+    image: balajiPhotos[0],
+    src: balajiPhotos[0],
+    gallery: balajiPhotos,
     bg: '#C97A1E',
     panel: '#D98A2C',
     dimensions: '150mm × 75mm × 65mm',
@@ -72,8 +125,9 @@ export const PRODUCTS: Product[] = [
     edition: 'Divine Gold Edition • In Stock',
     price: 999,
     basePrice: 999,
-    image: ganeshaShivlingImg,
-    src: ganeshaShivlingImg,
+    image: balGaneshaPhotos[0],
+    src: balGaneshaPhotos[0],
+    gallery: balGaneshaPhotos,
     bg: '#D84A1B',
     panel: '#E65D30',
     dimensions: '110mm × 70mm × 70mm',
@@ -152,8 +206,9 @@ export const PRODUCTS: Product[] = [
     edition: 'Divine Gold Edition • In Stock',
     price: 1199,
     basePrice: 1199,
-    image: krishnaFluteImg,
-    src: krishnaFluteImg,
+    image: balKrishnaPhotos[0],
+    src: balKrishnaPhotos[0],
+    gallery: balKrishnaPhotos,
     bg: '#0284C7',
     panel: '#0EA5E9',
     dimensions: '120mm × 80mm × 75mm',
@@ -183,6 +238,184 @@ export const PRODUCTS: Product[] = [
       { key: '160mm', label: '160mm Grand', priceDelta: 0 },
     ],
   },
+
+  // ---------------------------------------------------------------------------
+  // New products (Nov 2026). Prices marked PLACEHOLDER are estimates to confirm.
+  // ---------------------------------------------------------------------------
+  {
+    id: 'fig-05',
+    name: 'MEDITATING HANUMAN (GOLD)',
+    subtitle: 'Bal Hanuman in Dhyana Mudra • Silk Gold on Ornate Square Base',
+    category: 'god-idols',
+    categoryLabel: 'Sacred God Idol',
+    edition: 'Divine Gold Edition',
+    price: 1299, // PLACEHOLDER PRICE
+    basePrice: 1299,
+    image: hanumanGoldPhotos[0],
+    src: hanumanGoldPhotos[0],
+    gallery: hanumanGoldPhotos,
+    bg: '#B45309',
+    panel: '#D97706',
+    printTech: 'Silk Gold PLA 3D Print',
+    description:
+      'Serene Bal Hanuman seated cross-legged in meditation, hands resting in dhyana mudra, with a jewelled crown, sacred necklaces and a radiant halo behind. Printed in lustrous silk gold on a carved square pedestal.',
+    available: true,
+    featured: false,
+    highlights: [
+      'Peaceful meditating pose with dhyana mudra',
+      'Radiant sunburst halo and ornate crown',
+      'Carved square pedestal base',
+      'Lustrous silk gold finish',
+    ],
+    idealPlacement: 'Home Mandir, Study Desk, Meditation Corner',
+    availableFinishes: [{ key: 'gold-leaf', label: 'Silk Gold Finish', priceDelta: 0 }],
+    availableScales: [{ key: '120mm', label: 'Standard Size', priceDelta: 0 }],
+  },
+  {
+    id: 'fig-06',
+    name: 'MEDITATING HANUMAN (HAND-PAINTED)',
+    subtitle: 'Hand-Painted Bal Hanuman in Dhyana Mudra on Prayer Mat Base',
+    category: 'god-idols',
+    categoryLabel: 'Sacred God Idol',
+    edition: 'Hand-Painted Edition',
+    price: 1799, // PLACEHOLDER PRICE
+    basePrice: 1799,
+    image: hanumanPaintedPhotos[0],
+    src: hanumanPaintedPhotos[0],
+    gallery: hanumanPaintedPhotos,
+    bg: '#C2410C',
+    panel: '#EA580C',
+    printTech: 'Hand-Painted PLA 3D Print',
+    description:
+      'The meditating Bal Hanuman, individually hand-painted: white angavastram, saffron dhoti, golden crown and halo, seated on a deep blue prayer mat over a white base.',
+    available: true,
+    featured: false,
+    highlights: [
+      'Individually hand-painted by our studio',
+      'Saffron, white and gold traditional colours',
+      'Blue prayer mat base with painted detailing',
+      'Peaceful meditating pose with dhyana mudra',
+    ],
+    idealPlacement: 'Home Mandir, Gift for Hanuman Jayanti, Office Desk',
+    availableFinishes: [{ key: 'hand-painted', label: 'Hand-Painted Colours', priceDelta: 0 }],
+    availableScales: [{ key: '120mm', label: 'Standard Size', priceDelta: 0 }],
+  },
+  {
+    id: 'fig-07',
+    name: 'VEENA GANESHA',
+    subtitle: 'Contemporary Ganesha Sculpture Playing the Veena',
+    category: 'figurines',
+    categoryLabel: 'Art & Divine Figurine',
+    edition: 'Divine Art Series',
+    price: 1199, // PLACEHOLDER PRICE
+    basePrice: 1199,
+    image: veenaGaneshaPhotos[0],
+    src: veenaGaneshaPhotos[0],
+    gallery: veenaGaneshaPhotos,
+    bg: '#C2410C',
+    panel: '#F97316',
+    printTech: 'Silk Gold PLA 3D Print',
+    description:
+      'A modern, flowing interpretation of Lord Ganesha as the patron of music and arts, playing the veena. The stylised elephant head rises above a textured, gently curved body on a round base.',
+    available: true,
+    featured: false,
+    highlights: [
+      'Contemporary abstract Ganesha design',
+      'Detailed veena with strings and tuning pegs',
+      'Textured body contrasting with smooth silk gold',
+      'Thoughtful gift for musicians and art lovers',
+    ],
+    idealPlacement: 'Music Room, Living Room Shelf, Studio Desk',
+    availableFinishes: [{ key: 'gold-leaf', label: 'Silk Gold Finish', priceDelta: 0 }],
+    availableScales: [{ key: '120mm', label: 'Standard Size', priceDelta: 0 }],
+  },
+  {
+    id: 'decor-01',
+    name: 'ARTICULATED DRAGON',
+    subtitle: 'Flexible Print-in-Place Dragon • Rainbow Silk',
+    category: 'home-decor',
+    categoryLabel: 'Home Decor & Gifts',
+    edition: 'Collectible Gift',
+    price: 899, // PLACEHOLDER PRICE
+    basePrice: 899,
+    image: dragonPhotos[0],
+    src: dragonPhotos[0],
+    gallery: dragonPhotos,
+    bg: '#4D7C0F',
+    panel: '#65A30D',
+    printTech: 'Rainbow Silk PLA 3D Print',
+    description:
+      'A fully articulated dragon printed in one piece, with jointed segments that curl, coil and wiggle. Rainbow silk filament shifts from pink through gold to green along its spiny body.',
+    available: true,
+    featured: false,
+    highlights: [
+      'Print-in-place articulated joints',
+      'Colour-shifting rainbow silk filament',
+      'Detailed head, horns and spines',
+      'Fun desk toy and collectible gift',
+    ],
+    idealPlacement: 'Work Desk, Kids Room, Display Shelf',
+    availableFinishes: [{ key: 'unpainted', label: 'Rainbow Silk', priceDelta: 0 }],
+    availableScales: [{ key: '10 inches', label: 'Standard Length', priceDelta: 0 }],
+  },
+  {
+    id: 'decor-02',
+    name: 'SWAN MAIDEN VASE',
+    subtitle: 'Sculpted Decorative Vase • Matte White',
+    category: 'home-decor',
+    categoryLabel: 'Home Decor & Gifts',
+    edition: 'Home Decor Collection',
+    price: 999, // PLACEHOLDER PRICE
+    basePrice: 999,
+    image: swanVasePhotos[0],
+    src: swanVasePhotos[0],
+    gallery: swanVasePhotos,
+    bg: '#57534E',
+    panel: '#78716C',
+    printTech: 'Matte White PLA 3D Print',
+    description:
+      'An elegant sculptural vase in matte white: a graceful maiden and swan rise from swirling waves, framed by sweeping petal-like leaves around a flared opening.',
+    available: true,
+    featured: false,
+    highlights: [
+      'Sculpted maiden and swan relief',
+      'Flowing petal and wave design',
+      'Clean matte white finish',
+      'Statement piece for dried flowers or display',
+    ],
+    idealPlacement: 'Living Room, Entryway Console, Bedroom Shelf',
+    availableFinishes: [{ key: 'pure-marble-white', label: 'Matte White', priceDelta: 0 }],
+    availableScales: [{ key: '8 inches', label: 'Standard Size', priceDelta: 0 }],
+  },
+  {
+    id: 'decor-03',
+    name: 'SPIRAL TABLE LAMP',
+    subtitle: 'Twisted Spiral Lampshade on Gold Fluted Base',
+    category: 'home-decor',
+    categoryLabel: 'Home Decor & Gifts',
+    edition: 'Home Decor Collection',
+    price: 1499, // PLACEHOLDER PRICE
+    basePrice: 1499,
+    image: spiralLampPhotos[0],
+    src: spiralLampPhotos[0],
+    gallery: spiralLampPhotos,
+    bg: '#92400E',
+    panel: '#B45309',
+    printTech: 'White & Silk Gold PLA 3D Print',
+    description:
+      'A sculptural table lamp with a twisting white spiral shade that glows softly when lit, set on a fluted silk gold base.',
+    available: true,
+    featured: false,
+    highlights: [
+      'Twisted spiral shade for soft, diffused light',
+      'Fluted silk gold base',
+      'Modern sculptural design',
+      'Warm accent light for any room',
+    ],
+    idealPlacement: 'Bedside Table, Living Room, Reading Corner',
+    availableFinishes: [{ key: 'pure-marble-white', label: 'White & Gold', priceDelta: 0 }],
+    availableScales: [{ key: '8 inches', label: 'Standard Size', priceDelta: 0 }],
+  },
 ];
 
 /**
@@ -194,17 +427,18 @@ export const PRODUCTS: Product[] = [
 export const ALL_PRODUCTS: Product[] = PRODUCTS;
 
 /**
- * Helper to dynamically pull all active products for the homepage hero carousel.
- * Every product added to PRODUCTS is automatically included in the home hero page,
- * ensuring complete 1:1 synchronization between hero and catalog.
+ * Products shown in the homepage hero carousel: those marked `featured: true` (and available).
+ * Falls back to all available products if none are featured, so the carousel is never empty.
  */
 export const getFeaturedProducts = (source: Product[] = PRODUCTS): Product[] => {
   const list = Array.isArray(source) && source.length > 0 ? source : PRODUCTS;
   const active = list.filter((p) => p.available !== false);
+  const featured = active.filter((p) => p.featured);
+  if (featured.length > 0) return featured;
   return active.length > 0 ? active : list;
 };
 
-// Hero Carousel dynamically pulls all catalog products
+// Hero Carousel shows only the featured products
 export const HERO_PRODUCTS: Product[] = getFeaturedProducts(PRODUCTS);
 
 /**
@@ -217,6 +451,7 @@ export const normalizeCategory = (cat: string): string => {
   if (c === 'figurines' || c.includes('figurin') || c.includes('divine') || c.includes('art')) return 'figurines';
   if (c === 'accessories' || c.includes('accessor') || c.includes('gaming')) return 'accessories';
   if (c === 'custom-prints' || c.includes('custom')) return 'custom-prints';
+  if (c === 'home-decor' || c.includes('decor')) return 'home-decor';
   return c;
 };
 
